@@ -15,30 +15,42 @@ items = ['sz', 'rss', 'pss', 'sc',
 addr_re  = re.compile('^([0-9a-f]+)-([0-9a-f]+)')
 field_re = re.compile('^([A-Za-z_]*):\W+([0-9]+)\W+([a-z])B')
 
-def parse_line(line):
-    if addr_re.match(line): # e.g. line = '00400000-00408000 r-xp 00000000 08:02 31709 /usr/bin/head'
-        sys.stdout.write('\n' + str(time.time()))
-        items = addr_re.split(line)[1:3]
-        items.extend(line.split()[1:])
-        if len(items) == 6: # add missing 'name' field
-            items.append('(na)')
-        sys.stdout.write(' ' + ' '.join(items))
-    else: # e.g. line = 'Shared_Clean:          0 kB'
-        field_re.split(line)
-        (name,value,unit) = field_re.split(line)[1:4]
-        sys.stdout.write(' ' + value)
+def parse_map(section):
+    lines = [str(time.time())]
 
-def show_header():
-    head = ['time', 'start', 'end', 'perms', 'offset', 'dev', 'inode', 'name']
-    head.extend(items)
-    print(' '.join(head))
+    # first line is section descriptor
+    items = addr_re.split(section[0])[1:3] # start, end
+    items.extend(section[0].split()[1:]) # all other fields
+    if len(items) == 6:
+        items.append('(na)') # add missing 'name' field
+    lines.extend(items)
+
+    # remainder lines are info about that section
+    for l in section[1:]:
+        (name,value,unit) = field_re.split(l)[1:4]
+        lines.append(value)
+
+    return lines
 
 def go():
+    section = []
     line = sys.stdin.readline()
     while line:
         line = line.rstrip()
-        parse_line(line)
+        if addr_re.match(line) != None: # new section
+            if len(section) > 0: # false only on first iteration
+                print(' '.join(parse_map(section)))
+            section = [line] # start new section
+        else: # continue existing section
+            section.append(line)
         line = sys.stdin.readline()
+
+def show_header():
+    # column headers for lines in /proc/*/maps
+    head = ['time', 'start', 'end', 'perms', 'offset', 'dev', 'inode', 'name']
+    # extend with extra fields from smaps
+    head.extend(items)
+    print(' '.join(head))
 
 def usage():
     print('Usage: ./smaps < /proc/*/smaps')

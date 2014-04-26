@@ -6,6 +6,7 @@ function read_smaps() {
     pid="$2"
     fname="smaps.$procname.$pid"
     [ -e $fname ] && mv $fname $fname.old
+    ./maps head > $fname # write header
     while [ true ]; do
         [ ! -e /proc/$pid/smaps ] && break
         cat /proc/$pid/smaps | ./maps >> $fname
