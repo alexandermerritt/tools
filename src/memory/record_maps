@@ -1,0 +1,23 @@
+#! /usr/bin/env zsh
+set -u
+
+function read_smaps() {
+    procname="$1"
+    pid="$2"
+    fname="smaps.$procname.$pid"
+    [ -e $fname ] && mv $fname $fname.old
+    while [ true ]; do
+        [ ! -e /proc/$pid/smaps ] && break
+        cat /proc/$pid/smaps | ./maps >> $fname
+        usleep 500
+    done
+}
+
+[ $# -le 1 ] && echo 'Usage: ./record_maps cmd [args..]' && exit 1
+
+$@ &
+pid0=$!
+read_smaps $1 $pid0 &
+wait $pid0
+sleep 1 # read_smaps will quit when /proc/pid disappears
+
