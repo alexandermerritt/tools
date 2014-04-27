@@ -3,3 +3,5 @@
 *.ko
 *.so
 *.a
+*.swp
+*.swo
