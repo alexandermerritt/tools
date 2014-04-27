@@ -18,10 +18,11 @@ def parse_map(section):
     lines = []
 
     # first line is section descriptor
-    items = addr_re.split(section[0])[1:3] # start, end
-    items.extend(section[0].split()[1:]) # all other fields
+    line = section[0].replace('[', '').replace(']', '')
+    items = addr_re.split(line)[1:3] # start, end
+    items.extend(line.split()[1:]) # all other fields
     if len(items) == 6:
-        items.append('(na)') # add missing 'name' field
+        items.append('NA') # add missing 'name' field
     lines.extend(items)
 
     # remainder lines are info about that section
