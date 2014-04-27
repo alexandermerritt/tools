@@ -1,15 +1,31 @@
-#! /usr/bin/env zsh
+#! /usr/bin/env bash
 set -u
+
+# Resolve current directory. Borrowed from SO.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+# Our utility script
+MAPS="${DIR}/maps"
+if [ ! -e "$MAPS" ]; then
+    echo "Error: 'maps' script must be in same directory as ./record_maps"
+    exit 1
+fi
 
 function read_smaps() {
     procname="$1"
     pid="$2"
     fname="smaps.$procname.$pid"
     [ -e $fname ] && mv $fname $fname.old
-    ./maps head > $fname # write header
+    $MAPS head > $fname # write header
     while [ true ]; do
         [ ! -e /proc/$pid/smaps ] && break
-        cat /proc/$pid/smaps | ./maps >> $fname
+        cat /proc/$pid/smaps | $MAPS >> $fname
         usleep 500
     done
 }
