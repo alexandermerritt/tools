@@ -3,7 +3,7 @@ set -u
 set -e
 
 # Time slept between reads to smaps file
-DELAY_US=500000
+DELAY_US=100000
 
 # Resolve current directory. Borrowed from SO.
 SOURCE="${BASH_SOURCE[0]}"
