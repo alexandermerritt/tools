@@ -1,5 +1,9 @@
 #! /usr/bin/env bash
 set -u
+set -e
+
+# Time slept between reads to smaps file
+DELAY_US=500000
 
 # Resolve current directory. Borrowed from SO.
 SOURCE="${BASH_SOURCE[0]}"
@@ -18,15 +22,30 @@ if [ ! -e "$MAPS" ]; then
 fi
 
 function read_smaps() {
-    procname="$1"
+    procname=$(basename $1)
     pid="$2"
+
+    iternum=0
+
     fname="smaps.$procname.$pid"
-    [ -e $fname ] && mv $fname $fname.old
-    $MAPS head > $fname # write header
+    [ -e $fname ] && mv -f $fname $fname.old
+    echo "Writing to $fname"
+
+    # for all writes to the output file, prefix an extra column indicating to
+    # which instance of reading the smaps file they belong
+
+    # write column names
+    echo -n 'iter ' > $fname && $MAPS head >> $fname
+
+    tfile=$(mktemp)
     while [ true ]; do
         [ ! -e /proc/$pid/smaps ] && break
-        cat /proc/$pid/smaps | $MAPS >> $fname
-        usleep 500
+        # wrap into subshell and or with true so it doesn't kill script
+        (cat /proc/$pid/smaps | $MAPS > $tfile) || true
+        entries=$(wc -l < $tfile)
+        paste -d ' ' <(yes $iternum | head -n $entries) <(cat $tfile) >> $fname
+        usleep $DELAY_US
+        iternum=$((iternum+1))
     done
 }
 
