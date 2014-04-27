@@ -5,6 +5,8 @@
 import sys
 import re
 
+import nsclock # custom module
+
 # make sure order matches in /proc/*/smaps after a line starting with address
 items = ['sz', 'rss', 'pss', 'sc',
          'sd', 'pc', 'pd', 'ref',
@@ -14,14 +16,14 @@ items = ['sz', 'rss', 'pss', 'sc',
 addr_re  = re.compile('^([0-9a-f]+)-([0-9a-f]+)')
 field_re = re.compile('^([A-Za-z_]*):\W+([0-9]+)\W+([a-z])B')
 
-def parse_map(section):
-    lines = []
+def parse_map(curtime, section):
+    lines = [str(curtime)]
 
     # first line is section descriptor
     line = section[0].replace('[', '').replace(']', '')
     items = addr_re.split(line)[1:3] # start, end
     items.extend(line.split()[1:]) # all other fields
-    if len(items) == 6:
+    if len(items) == 7:
         items.append('NA') # add missing 'name' field
     lines.extend(items)
 
@@ -35,11 +37,12 @@ def parse_map(section):
 def go():
     section = []
     line = sys.stdin.readline()
+    curtime = str(nsclock.nsclock())
     while line:
         line = line.rstrip()
         if addr_re.match(line) != None: # new section
             if len(section) > 0: # false only on first iteration
-                print(' '.join(parse_map(section)))
+                print(' '.join(parse_map(curtime, section)))
             section = [line] # start new section
         else: # continue existing section
             section.append(line)
@@ -47,7 +50,7 @@ def go():
 
 def show_header():
     # column headers for lines in /proc/*/maps
-    head = ['start', 'end', 'perms', 'offset', 'dev', 'inode', 'name']
+    head = ['nstime', 'start', 'end', 'perms', 'offset', 'dev', 'inode', 'name']
     # extend with extra fields from smaps
     head.extend(items)
     print(' '.join(head))
