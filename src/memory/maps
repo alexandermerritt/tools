@@ -46,7 +46,7 @@ def go():
 
 def show_header():
     # column headers for lines in /proc/*/maps
-    head = ['time', 'start', 'end', 'perms', 'offset', 'dev', 'inode', 'name']
+    head = ['start', 'end', 'perms', 'offset', 'dev', 'inode', 'name']
     # extend with extra fields from smaps
     head.extend(items)
     print(' '.join(head))
