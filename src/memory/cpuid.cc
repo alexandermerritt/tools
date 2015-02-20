@@ -115,7 +115,8 @@ struct regs
     unsigned int eax, ebx, ecx, edx;
 };
 
-void cpuid(unsigned int func, struct regs &r)
+static inline void
+cpuid(unsigned int func, struct regs &r)
 {
     __asm__("cpuid \n\t"
             : "=a"(r.eax), "=b"(r.ebx), "=c"(r.ecx), "=d"(r.edx)
@@ -124,8 +125,13 @@ void cpuid(unsigned int func, struct regs &r)
             );
 }
 
-void print_cpuid(struct regs &r)
+void cpuid2(void)
 {
+    struct regs r;
+
+    memset(&r, 0, sizeof(r));
+    cpuid(2, r);
+
     if ((0xff & r.eax) != 0x01)
         return;
     for (int i = 0; i < 4; i++) {
@@ -161,15 +167,100 @@ void print_cpuid(struct regs &r)
     }
 }
 
-int main(int argc, char *argv[])
+static const char *CPUID4_EAX[] = {
+    [0] = "Null - No more caches",
+    [1] = "Data cache",
+    [2] = "Instruction cache",
+    [3] = "Unified cache",
+    // bits 4-31 reserved
+};
+
+// Leaf 04H output depends on the initial value in ECX
+void cpuid4(void)
 {
     struct regs r;
-    if (argc != 2)
+    int val;
+
+    printf("Legend\n"
+            "    [1] Maximum number of addressable IDs\n"
+            "        for logical processors sharing this cache\n"
+            "    [2] Maximum number of addressable IDs\n"
+            "        for processor cores in the physical package\n"
+            "    [3] 0: WBINVD/INVD from threads sharing this\n"
+            "           cache acts upon lower level caches for\n"
+            "           threads sharing this cache.\n"
+            "        1: WBINVD/INVD is not guaranteed to act upon\n"
+            "           lower level caches of non-originating threads\n"
+            "           sharing this cache.\n"
+            "\n"
+            );
+
+    memset(&r, 0, sizeof(r));
+    int ecx = 0;
+    while (1) {
+        r.ecx = ecx++;
+        cpuid(4, r);
+
+        // check if a cache type is specified
+        if (!(val = (r.eax) & 0x1f))
+            break;
+
+        printf("---- cache ----\n");
+
+        // parse EAX
+        printf("type:               %s\n", CPUID4_EAX[val]);
+        val = (r.eax >> 5) & 0x7;
+        printf("level:              %d\n", val);
+        val = (r.eax >> 8) & 0x1;
+        printf("self-init:          %d\n", val);
+        val = (r.eax >> 9) & 0x1;
+        printf("full ass:           %d\n", val);
+        // bits 13-10 reserved
+        val = (r.eax >> 14) & 0xfff;
+        printf("max id:             %d [1]\n", val+1);
+        val = (r.eax >> 26) & 0x3f;
+        printf("max id:             %d [2]\n", val+1);
+
+        // parse EBX
+        val = (r.ebx) & 0xfff;
+        printf("line size:          %d\n", val+1);
+        val = (r.ebx >> 12) & 0x3ff;
+        printf("line partitions:    %d\n", val+1);
+        val = (r.ebx >> 22) & 0x3ff;
+        printf("ways of ass:        %d\n", val+1);
+
+        // parse ECX
+        val = (r.ecx) & 0xffffffff;
+        printf("number of sets:     %d\n", val+1);
+
+        // parse EDX
+        val = (r.edx) & 0x1;
+        printf("wb invalidate:      %d [3]\n", val);
+        val = (r.edx >> 1) & 0x1;
+        printf("cache incl:         %d (%sinclusive)\n",
+                val, (val ? "" : "not "));
+        val = (r.edx >> 2) & 0x1;
+        printf("complex index:      %d (%s)\n",
+                val, (val ? "complex indexing" : "direct-mapped"));
+        // bits 31-03 reserved
+    }
+
+}
+
+int main(int argc, char *argv[])
+{
+    if (argc != 2) {
+        fprintf(stderr, "Error: specify cpuid function\n");
         return -1;
+    }
     unsigned int func = atoi(argv[1]);
-    memset(&r, 0, sizeof(struct regs));
-    cpuid(func, r);
-    if (func == 2)
-        print_cpuid(r);
+    switch(func) {
+        case 2: { cpuid2(); break; }
+        case 4: { cpuid4(); break; }
+        default: {
+            fprintf(stderr, "Error: only supported are 2 and 4\n");
+            return -1;
+        }
+    };
     return 0;
 }
