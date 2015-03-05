@@ -135,13 +135,13 @@ void cpuid2(void)
     if ((0xff & r.eax) != 0x01)
         return;
     for (int i = 0; i < 4; i++) {
-        unsigned int v,idx;
+        unsigned int v(0),idx;
         switch (i) {
             case 0: v = r.eax; break;
             case 1: v = r.ebx; break;
             case 2: v = r.ecx; break;
             case 3: v = r.edx; break;
-            default: break;
+            default: abort();
         }
 
         if (0x80000000 & v)
