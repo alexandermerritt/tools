@@ -19,7 +19,7 @@ using namespace std;
 
 enum
 {
-    PAGE_SHIFT = 12,
+    PAGE_SHIFT = 12, // XXX set this (12, 21, 30)
 };
 
 struct page
@@ -63,7 +63,7 @@ static size_t _runtest(void *area, size_t ws, size_t iters)
     int *idxs = new int[ws];
     for (size_t pgidx = 0; pgidx < ws; pgidx++)
         idxs[pgidx] = pgidx;
-    for (size_t pgidx = 0; pgidx < (ws<<2); pgidx++)
+    for (size_t pgidx = 0; pgidx < ws; pgidx++)
         swap(idxs[dis(m)], idxs[dis(m)]);
 
     volatile long i; // MUST BE volatile if compiler has -O > 0
@@ -81,22 +81,26 @@ static size_t _runtest(void *area, size_t ws, size_t iters)
 static void runtest(void)
 {
     const size_t areasz     = (1UL << 30);
-    const size_t pgs_from   = PAGE_SHIFT;
-    const size_t pgs_to     = ((1<<27)>>PAGE_SHIFT);
-    const size_t pgs_incr   = PAGE_SHIFT;
-    const size_t iters      = 64;
+    const size_t pgs_from   = 1;
+    const size_t pgs_to     = (areasz >> PAGE_SHIFT);
+    const size_t pgs_incr   = (PAGE_SHIFT == 12 ? 16 : 1);
+    const size_t iters      = (PAGE_SHIFT == 12 ? 64 : 1024);
+
+    const int    huge       = 0; //MAP_HUGETLB;
 
     if (pincpu(0))
         exit(EXIT_FAILURE);
 
     void *addr = mmap(nullptr, areasz, PROT_READ|PROT_WRITE,
-            MAP_ANON|MAP_PRIVATE|MAP_POPULATE|MAP_LOCKED, -1, 0);
-    if (MAP_FAILED == addr)
+            MAP_ANON|MAP_PRIVATE|MAP_POPULATE|MAP_LOCKED|huge, -1, 0);
+    if (MAP_FAILED == addr) {
+        perror("mmap");
         exit(EXIT_FAILURE);
+    }
 
-    cout << "pgs4k ns1k" << endl;
+    cout << "pgs ns1k" << endl;
     size_t ns;
-    for (size_t ws = pgs_from; ws <= pgs_to; ws += pgs_incr) {
+    for (size_t ws = pgs_from; ws < pgs_to; ws += pgs_incr) {
         ns = _runtest(addr, ws, iters);
         cout << ws << " " << (ns * 1024 / (ws * iters)) << endl;
     }
