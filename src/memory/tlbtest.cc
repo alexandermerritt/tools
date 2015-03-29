@@ -82,6 +82,8 @@ static int pincpu(int cpu)
     return 0;
 }
 
+#define LIKWID_REGION   "Compute"
+
 // returns ns elapsed
 template <typename PG_TYPE>
 static size_t _runtest(void *area, size_t area_sz, size_t ws, size_t iters)
@@ -121,7 +123,7 @@ static void runtest(int wset_low, int wset_high, int pgs_incr)
     const size_t pg_sz      = (1UL << PAGE_ORDER);
     const size_t area_sz    = (wset_high * pg_sz);
     //const size_t pgs_incr   = 1; //(PAGE_ORDER > 12 ? 1 : 16);
-    const size_t iters      = 512; //(PAGE_ORDER > 12 ? 1024 : 64);
+    const size_t iters      = 2048; //(PAGE_ORDER > 12 ? 1024 : 64);
     const int report_per    = 1024;
 
     // XXX linux doesn't do 1G pages yet
@@ -192,7 +194,10 @@ int main(int argc, char *argv[])
     else if (order == PAGE_2M)
         runtest<PAGE_2M>(pgs_low, pgs_high, pgs_incr);
     else
-        return 1;
+        goto fail;
 
     return 0;
+
+fail:
+    return 1;
 }

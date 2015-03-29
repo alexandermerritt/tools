@@ -2,13 +2,26 @@ CXX = clang++
 CXXFLAGS = -O2 -std=c++11 -Wall -Werror -Wextra
 CXXFLAGS += -Wno-unused-variable -Wno-unused-function
 
-all:	tlbtest cpuid
+EXES = tlbtest cpuid htable list deque sort
+all:	$(EXES)
 
-tlbtest:	tlbtest.cc
+sort:	sort.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-cpuid:	cpuid.cc
+deque:	deque.o
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+list:	list.o
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+htable:	htable.o
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+tlbtest:	tlbtest.o
+	$(CXX) $(CXXFLAGS) $^ -o $@ -L/usr/local/lib -llikwid -lm
+
+cpuid:	cpuid.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 clean:
-	rm -f tlbtest cpuid
+	rm -f *.o $(EXES)
