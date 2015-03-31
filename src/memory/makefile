@@ -2,8 +2,11 @@ CXX = clang++
 CXXFLAGS = -O2 -std=c++11 -Wall -Werror -Wextra
 CXXFLAGS += -Wno-unused-variable -Wno-unused-function
 
-EXES = tlbtest cpuid htable list deque sort
+EXES = tlbtest cpuid htable list deque sort mmap
 all:	$(EXES)
+
+mmap:	mmap.o
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
 sort:	sort.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
