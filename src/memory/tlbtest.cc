@@ -22,7 +22,7 @@
 
 using namespace std;
 
-const size_t MAX_MEM = (1UL << 33);
+const size_t MAX_MEM = (1UL << 30);
 
 //
 // Structures
@@ -71,6 +71,7 @@ static size_t clockdiff(struct timespec &t1, struct timespec &t2)
     return (time2 - time1);
 }
 
+#ifdef __linux__
 static int pincpu(int cpu)
 {
     cpu_set_t mask;
@@ -81,6 +82,7 @@ static int pincpu(int cpu)
         return 1;
     return 0;
 }
+#endif
 
 #define LIKWID_REGION   "Compute"
 
@@ -126,18 +128,29 @@ static void runtest(int wset_low, int wset_high, int pgs_incr)
     const size_t iters      = 2048; //(PAGE_ORDER > 12 ? 1024 : 64);
     const int report_per    = 1024;
 
-    // XXX linux doesn't do 1G pages yet
-    const size_t huge       = (PAGE_ORDER == PAGE_2M ? MAP_HUGETLB : 0);
-
     if ((wset_low % pgs_incr) || (wset_high % pgs_incr))
         throw runtime_error("working set low/high"
                 " must be multiple of increment");
 
+#ifdef __linux__
     if (pincpu(0))
         throw runtime_error("could not pin cpu");
+#endif
 
-    void *area = mmap(nullptr, area_sz, PROT_READ|PROT_WRITE,
-            MAP_ANON|MAP_PRIVATE|MAP_POPULATE|MAP_LOCKED|huge, -1, 0);
+    int huge = (PAGE_ORDER == PAGE_2M);
+    uint32_t flags = MAP_ANON | MAP_PRIVATE;
+#ifdef __unix__
+    flags |= MAP_PREFAULT_READ;
+    if (huge)
+	    flags |= MAP_ALIGNED_SUPER;
+#elif __linux__
+    flags |= MAP_POPULATE | MAP_LOCKED;
+    if (huge)
+	    flags |= MAP_HUGETLB;
+#endif
+
+    void *area = mmap((void*)0xdeadbeef, area_sz, PROT_READ|PROT_WRITE,
+            flags, -1, 0);
     if (MAP_FAILED == area) {
         perror("mmap");
         if (huge)
@@ -148,8 +161,25 @@ static void runtest(int wset_low, int wset_high, int pgs_incr)
         exit(EXIT_FAILURE);
     }
 
-    cout << "pgs time_ns" << endl;
     size_t ns;
+#ifdef __unix__
+    // prefault the pages, since mmap doesn't have such a flag...
+    for (int ws = wset_low; ws <= wset_high; ws += pgs_incr) {
+        switch (PAGE_ORDER) {
+            case PAGE_4K: {
+                ns = _runtest<page4k>(area, area_sz, ws, iters);
+            } break;
+            case PAGE_2M: {
+                ns = _runtest<page2m>(area, area_sz, ws, iters);
+            } break;
+            // TODO case PAGE_1G:
+            default:
+                assert(!"page order invalid");
+        }
+    }
+#endif
+
+    cout << "pgs time_ns" << endl;
     for (int ws = wset_low; ws <= wset_high; ws += pgs_incr) {
         switch (PAGE_ORDER) {
             case PAGE_4K: {
@@ -165,6 +195,8 @@ static void runtest(int wset_low, int wset_high, int pgs_incr)
         cout << ws << " " << (ns * report_per / (ws * iters)) << endl;
     }
 
+    //printf("sleeping\n");
+    //sleep(20);
     munmap(area, area_sz);
 }
 
