@@ -15,6 +15,7 @@
 #include <sys/lock.h>
 #if defined(__DragonFly__)
 #include <sys/spinlock2.h>
+#include <vm/bitops.h>
 #elif defined(__FreeBSD__)
 #include <sys/sx.h>
 #endif
@@ -27,6 +28,7 @@
 #include <sys/mutex.h>
 #include <sys/proc.h>
 
+void testbitset(void);
 void print_pmap(struct proc *);
 void dump_pq_free(void);
 
@@ -36,13 +38,13 @@ enum action
 	PRT_VMSPACE = 1,
 	PRT_PMAP,
 	DUMP_PQ_FREE,
+	TEST_BITSET,
 };
 
 #define PROC_WATCH_NAME		"map"
 #define PROC_WATCH_NAME_LEN	3
 
-static inline
-int is_proc(struct proc *proc)
+static inline int is_proc(struct proc *proc)
 {
 	int rv;
 	rv = strncmp(proc->p_comm,
@@ -92,7 +94,7 @@ void _walk_rb_pmap(struct pv_entry *entry)
 	if (entry && entry->pv_entry.rbe_left)
 		_walk_rb_pmap(entry->pv_entry.rbe_left);
 	m = entry->pv_m;
-	uprintf("%p\n", (uintptr_t)m->phys_addr);
+	uprintf("%p\n", (void*)m->phys_addr);
 	if (entry && entry->pv_entry.rbe_right)
 		_walk_rb_pmap(entry->pv_entry.rbe_right);
 }
@@ -112,7 +114,7 @@ void print_pmap(struct proc *proc)
 	// pm_token is held when incrementing pm_count, and pmap_scan
 	// pmap_scan first locks pm_token, then briefly spin_lock's
 	// the pm_spin to touch the rbtree
-	
+
 	lwkt_gettoken(&pmap->pm_token);
 	spin_lock(&pmap->pm_spin);
 	walk_rb_pmap(pmap);
@@ -176,7 +178,46 @@ static void dodf(enum action a)
 		case DUMP_PQ_FREE:
 			dump_pq_free();
 			break;
+		case TEST_BITSET:
+			testbitset();
+			break;
 		default: break;
+	}
+}
+
+typedef unsigned char uchar;
+
+void testbitset(void)
+{
+	char msg[256];
+	const int n = 4;
+	int i;
+	uchar set[n];
+	for (i = 0; i < 32; i++) {
+		memset(set, 0, sizeof(set));
+		set_bit(set, n, i);
+		ksnprintf(msg, 256, "0x%02x%02x%02x%02x",
+				set[0], set[1], set[2], set[3]);
+		uprintf("%s set: %d\n", msg, bit_isset(set, n, i));
+
+		clear_bit(set, n, i);
+		ksnprintf(msg, 256, "0x%02x%02x%02x%02x",
+				set[0], set[1], set[2], set[3]);
+		uprintf("%s set: %d\n", msg, bit_isset(set, n, i));
+	}
+
+	uprintf("setting 0 4 7 8 23\n");
+	set_bit(set, n, 0);
+	set_bit(set, n, 4);
+	set_bit(set, n, 7);
+	set_bit(set, n, 8);
+	set_bit(set, n, 23);
+	ksnprintf(msg, 256, "0x%02x%02x%02x%02x",
+			set[0], set[1], set[2], set[3]);
+	uprintf("%s\n", msg);
+	for (i = 0; i < 7; i++) { /* 0 and 7 should return -1 */
+		uprintf("%d th bit set, idx = %d\n", i,
+				nth_bitset(set, n, i));
 	}
 }
 #endif	/* __DragonFly__ */
@@ -184,56 +225,56 @@ static void dodf(enum action a)
 #if defined(__FreeBSD__)
 static void dofreebsd(void)
 {
-    struct proc *proc = NULL;
-    struct vm_map_entry *entry;
-    struct vm_map *vmap;
-    struct pmap *pmap;
-    struct pv_chunk *pc;
-    struct vmspace *vms;
-    int n, i, b, pvper;
+	struct proc *proc = NULL;
+	struct vm_map_entry *entry;
+	struct vm_map *vmap;
+	struct pmap *pmap;
+	struct pv_chunk *pc;
+	struct vmspace *vms;
+	int n, i, b, pvper;
 
-    sx_slock(&proctree_lock);
-    FOREACH_PROC_IN_SYSTEM(proc) {
-        if (0 == strncmp(proc->p_comm, "mmap", 4))
-            break;
-    }
+	sx_slock(&proctree_lock);
+	FOREACH_PROC_IN_SYSTEM(proc) {
+		if (0 == strncmp(proc->p_comm, "mmap", 4))
+			break;
+	}
 
-    if (!proc) {
-        uprintf("    No mmap found\n");
-        sx_sunlock(&proctree_lock);
-        return;
-    }
+	if (!proc) {
+		uprintf("    No mmap found\n");
+		sx_sunlock(&proctree_lock);
+		return;
+	}
 
-    PROC_LOCK(proc);
-    sx_sunlock(&proctree_lock);
+	PROC_LOCK(proc);
+	sx_sunlock(&proctree_lock);
 
-    vms = proc->p_vmspace;
-    vmap = &vms->vm_map;
-    pmap = &vms->vm_pmap;
+	vms = proc->p_vmspace;
+	vmap = &vms->vm_map;
+	pmap = &vms->vm_pmap;
 
-    n = vmap->nentries;
-    entry = &vmap->header;
-    printf("--- %06d vmap ---\n", proc->p_pid);
-    while (n-- > 0 && !!entry) {
-        printf("    %lu [0x%lx,0x%lx) \n",
-                entry->end-entry->start,
-                entry->start, entry->end);
-        entry = entry->next;
-    }
+	n = vmap->nentries;
+	entry = &vmap->header;
+	printf("--- %06d vmap ---\n", proc->p_pid);
+	while (n-- > 0 && !!entry) {
+		printf("    %lu [0x%lx,0x%lx) \n",
+				entry->end-entry->start,
+				entry->start, entry->end);
+		entry = entry->next;
+	}
 
-    printf("--- %06d pmap ---\n", proc->p_pid);
-    pvper = sizeof(pc->pc_map) << 3; // bits per entry in bitmap
-    TAILQ_FOREACH(pc, &pmap->pm_pvchunk, pc_list) {
-        for (i = 0; i < _NPCM; i++) {
-            for (b = 0; b < pvper; b++) {
-                if (0 == (pc->pc_map[i] & (1<<b)))
-                    printf("    0x%lx\n",
-                            pc->pc_pventry[i * pvper + b].pv_va);
-            }
-        }
-    }
+	printf("--- %06d pmap ---\n", proc->p_pid);
+	pvper = sizeof(pc->pc_map) << 3; // bits per entry in bitmap
+	TAILQ_FOREACH(pc, &pmap->pm_pvchunk, pc_list) {
+		for (i = 0; i < _NPCM; i++) {
+			for (b = 0; b < pvper; b++) {
+				if (0 == (pc->pc_map[i] & (1<<b)))
+					printf("    0x%lx\n",
+							pc->pc_pventry[i * pvper + b].pv_va);
+			}
+		}
+	}
 
-    PROC_UNLOCK(proc);
+	PROC_UNLOCK(proc);
 }
 #endif	/* __FreeBSD__ */
 
@@ -242,30 +283,30 @@ static void doaction(void)
 #if defined(__FreeBSD__)
 	dofreebsd();
 #elif defined(__DragonFly__)
-	dodf(PRT_PMAP);
+	dodf(TEST_BITSET);
 #endif
 }
 
 static int event_handler(struct module *module, int event, void *arg)
 {
-    int e = 0;
-    switch (event) {
-        case MOD_LOAD:
-		doaction();
-		break;
-        case MOD_UNLOAD:
-		break;
-        default:
-		e = EOPNOTSUPP;
-		break;
-    }
-    return e;
+	int e = 0;
+	switch (event) {
+		case MOD_LOAD:
+			doaction();
+			break;
+		case MOD_UNLOAD:
+			break;
+		default:
+			e = EOPNOTSUPP;
+			break;
+	}
+	return e;
 }
 
 struct moduledata mod_conf = {
-    .name = "memwalk",
-    .evhand = event_handler,
-    .priv = NULL
+	.name = "memwalk",
+	.evhand = event_handler,
+	.priv = NULL
 };
 
 DECLARE_MODULE(memwalk, mod_conf, SI_SUB_DRIVERS, SI_ORDER_ANY);
