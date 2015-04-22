@@ -68,6 +68,8 @@ int test_mcontrol(void *addr, int ncolors)
 	pid_t pid = getpid();
 	int pg;
 
+	// XXX NOTE enable this portion so the app can test itself
+	// otherwise, use the sys/ld/libmmap.so preloaded to force control
 #if 0
 	printf(" --- mcontrol PGCOLOR\n");
 	int rv = mcontrol(addr, LEN, MADV_PGCOLOR, ncolors);
