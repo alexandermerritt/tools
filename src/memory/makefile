@@ -6,7 +6,7 @@ EXES = tlbtest cpuid htable list deque sort mmap
 all:	$(EXES)
 
 mmap:	mmap.o
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) mmap.o -o $@
 
 sort:	sort.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -21,10 +21,13 @@ htable:	htable.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 tlbtest:	tlbtest.o
-	$(CXX) $(CXXFLAGS) $^ -o $@ -L/usr/local/lib -llikwid -lm
+	$(CXX) $(CXXFLAGS) tlbtest.o -o $@
 
 cpuid:	cpuid.o
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(CXXFLAGS) cpuid.o -o $@
+
+addr:	addr.o
+	$(CXX) $(CXXFLAGS) addr.o -o $@
 
 clean:
 	rm -f *.o $(EXES)
