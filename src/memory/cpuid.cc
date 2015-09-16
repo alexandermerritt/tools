@@ -110,6 +110,43 @@ static const char *CPUID2[] = {
     [0xFF] = "General CPUID leaf 2 does not report cache descriptor information, use CPUID leaf 4 to query cache parameters",
 };
 
+// ebx bits when cpuid(eax=7)
+// some omitted because don't care
+static const char *EXTFEAT[] = {
+    [0]  = "FSGBASE",
+    [1]  = "TSC Adjust MSR",
+    [2]  = "(reserved)",
+    [3]  = "BMI1",
+    [4]  = "HLE",
+    [5]  = "AVX2",
+    [6]  = "(reserved)",
+    [7]  = "Supervisor-mode Exec Prevention",
+    [8]  = "BMI2",
+    [9]  = "Enhanced REP MOVSB",
+    [10] = "INVPCID",
+    [11] = "Restricted Transational Memory",
+    [12] = "Platform QoS Monitoring",
+    [13] = "Deprecates FPU CS/DS",
+    [14] = "Memory Protection Extension (MPX)",
+    [15] = "Platform QoS Enforcement",
+    [16] = "(reserved)",
+    [17] = "(reserved)",
+    [18] = "RDSEED",
+    [19] = "ADX",
+    [20] = "Supervisor-mode Access Prevention",
+    [21] = "(reserved)",
+    [22] = "(reserved)",
+    [23] = "(reserved)",
+    [24] = "(reserved)",
+    [25] = "Processor Trace",
+    [26] = "(reserved)",
+    [27] = "(reserved)",
+    [28] = "(reserved)",
+    [29] = "(reserved)",
+    [30] = "(reserved)",
+    [31] = "(reserved)",
+};
+
 struct regs
 {
     unsigned int eax, ebx, ecx, edx;
@@ -123,6 +160,43 @@ cpuid(unsigned int func, struct regs &r)
             : "a"(func), "b"(r.ebx), "c"(r.ecx), "d"(r.edx)
             :
             );
+}
+
+void qos_monitoring(void)
+{
+    struct regs r;
+    memset(&r, 0, sizeof(r));
+
+    r.ecx = 0;
+    cpuid(0xF, r);
+
+    printf("\t\tMax RMID = %u\n", r.ebx);
+    if ((r.edx >> 1) & 0x1)
+        printf("\t\tL3 Cache QoS Monitoring\n");
+}
+
+void qos_enforce(void)
+{
+}
+
+void features(void)
+{
+    struct regs r;
+    memset(&r, 0, sizeof(r));
+
+    r.ecx = 0;
+    cpuid(7, r);
+
+    printf("\n\nFeature list\n");
+    for (int i = 0; i < 32; i++) {
+        if ((r.ebx >> i) & 0x1) {
+            printf("\t%s\n", EXTFEAT[i]);
+            if (i == 12)
+                qos_monitoring();
+            if (i == 15)
+                qos_enforce();
+        }
+    }
 }
 
 void cpuid2(void)
@@ -247,20 +321,10 @@ void cpuid4(void)
 
 }
 
-int main(int argc, char *argv[])
+int main(int argc __unused, char *argv[] __unused)
 {
-    if (argc != 2) {
-        fprintf(stderr, "Error: specify cpuid function\n");
-        return -1;
-    }
-    unsigned int func = atoi(argv[1]);
-    switch(func) {
-        case 2: { cpuid2(); break; }
-        case 4: { cpuid4(); break; }
-        default: {
-            fprintf(stderr, "Error: only supported are 2 and 4\n");
-            return -1;
-        }
-    };
+    cpuid2();
+    cpuid4();
+    features();
     return 0;
 }
