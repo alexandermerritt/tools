@@ -153,11 +153,11 @@ struct regs
 };
 
 static inline void
-cpuid(unsigned int func, struct regs &r)
+cpuid(unsigned int leaf, unsigned int subleaf, struct regs &r)
 {
     __asm__("cpuid \n\t"
             : "=a"(r.eax), "=b"(r.ebx), "=c"(r.ecx), "=d"(r.edx)
-            : "a"(func), "b"(r.ebx), "c"(r.ecx), "d"(r.edx)
+            : "a"(leaf), "b"(0), "c"(subleaf), "d"(0)
             :
             );
 }
@@ -167,16 +167,42 @@ void qos_monitoring(void)
     struct regs r;
     memset(&r, 0, sizeof(r));
 
-    r.ecx = 0;
-    cpuid(0xF, r);
+    cpuid(0xF, 0, r);
 
-    printf("\t\tMax RMID = %u\n", r.ebx);
-    if ((r.edx >> 1) & 0x1)
-        printf("\t\tL3 Cache QoS Monitoring\n");
+    printf("--- Resource Monitoring 0Fh ---\n");
+
+    printf("\tMax RMID = %u\n", r.ebx);
+    int l3 = ((r.edx >> 1) & 0x1);
+    printf("\tL3 = %d\n", l3);
+    if (l3) {
+        cpuid(0xF, 1, r);
+        printf("\t\tQM_CTR multiplier to bytes = %u\n", r.ebx);
+        printf("\t\tMax L3 RMID = %u\n", r.ecx);
+        printf("\t\tOccupancy monitoring = %d\n", r.edx & 0x1);
+        // add other L3 monitoring capabilities
+    }
 }
 
 void qos_enforce(void)
 {
+    struct regs r;
+    memset(&r, 0, sizeof(r));
+
+    cpuid(0x10, 0, r);
+
+    printf("--- Resource Enforcement 10h ---\n");
+
+    int l3 = ((r.ebx >> 1) & 0x1);
+    printf("\tL3 = %d\n", l3);
+    if (l3) {
+        cpuid(0x10, 1, r); // ResID 1 (=subleaf) is L3
+        // "one capacity mask bit corresponds to some number of ways
+        // in cache"
+        printf("\t\tLength of capacity bitmask (-1) = %u\n", r.eax & 0x1F);
+        printf("\t\tCBM = %08x\n", r.ebx); // XXX
+        printf("\t\tCode/Data Prioritization = %u\n", ((r.ecx >> 2) & 0x1));
+        printf("\t\tMax COS value = %u\n", r.edx & 0xFFFF);
+    }
 }
 
 void features(void)
@@ -184,27 +210,26 @@ void features(void)
     struct regs r;
     memset(&r, 0, sizeof(r));
 
-    r.ecx = 0;
-    cpuid(7, r);
+    cpuid(0x7, 0, r);
 
-    printf("\n\nFeature list\n");
+    printf("--- Feature List 07h ---\n");
+    printf("\t(max subleaf %d)\n", r.eax);
+    printf("\tebx: %08x\n", r.ebx);
     for (int i = 0; i < 32; i++) {
         if ((r.ebx >> i) & 0x1) {
             printf("\t%s\n", EXTFEAT[i]);
-            if (i == 12)
-                qos_monitoring();
-            if (i == 15)
-                qos_enforce();
         }
     }
+    qos_monitoring();
+    qos_enforce();
 }
 
 void cpuid2(void)
 {
     struct regs r;
-
     memset(&r, 0, sizeof(r));
-    cpuid(2, r);
+
+    cpuid(2, 0, r);
 
     if ((0xff & r.eax) != 0x01)
         return;
@@ -272,8 +297,7 @@ void cpuid4(void)
     memset(&r, 0, sizeof(r));
     int ecx = 0;
     while (1) {
-        r.ecx = ecx++;
-        cpuid(4, r);
+        cpuid(4, ++ecx, r);
 
         // check if a cache type is specified
         if (!(val = (r.eax) & 0x1f))
