@@ -179,6 +179,10 @@ void qos_monitoring(void)
         printf("\t\tQM_CTR multiplier to bytes = %u\n", r.ebx);
         printf("\t\tMax L3 RMID = %u\n", r.ecx);
         printf("\t\tOccupancy monitoring = %d\n", r.edx & 0x1);
+        printf("\t\tL3 external bandwidth monitoring = %d\n",
+			(r.edx >> 1) & 0x1);
+        printf("\t\tL3 local bandwidth monitoring = %d\n",
+			(r.edx >> 2) & 0x1);
         // add other L3 monitoring capabilities
     }
 }
