@@ -14,6 +14,7 @@ def change_cos(cos, cos_n):
     cmd.append('llc:' + str(cos_n) + '=' + hex(cos))
     sp.check_call(cmd)
 
+print('wss cycles mask llc')
 wss = 1 # MiB
 while wss <= (llc+1):
     cos = maxcos
@@ -23,7 +24,7 @@ while wss <= (llc+1):
                 str(wss << 20), str(1) ]
         out = sp.check_output(cmd).strip()
         out += ' ' + hex(cos)
-        out += ' ' + str(maxcos * (bin(cos).count('1')/20.))
+        out += ' ' + str(llc * (bin(cos).count('1')/20.))
         print(out)
         cos = cos >> 1
     wss += 1
