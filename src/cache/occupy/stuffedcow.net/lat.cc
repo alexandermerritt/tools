@@ -88,7 +88,6 @@ static double run_randlat(long long size, int ITS)
 			array[k] = temp;
 		}
 		register void* j = pos;
-		putchar (' '); fflush(stdout);
 
 		long long start = rdtsc();
 		
@@ -123,7 +122,6 @@ static double run_randlat(long long size, int ITS)
 		static void *addrs[MIN_ITS*16];
 		for (int i=0;i<MIN_ITS*16;i++)
 			addrs[i] = array + my_rand(size);
-		putchar (' '); fflush(stdout);
 
 		long long start = rdtsc();
 		
@@ -162,7 +160,7 @@ static double run_randlat(long long size, int ITS)
 	if (opts.offset_mode)
 		printf ("%f\n", clocks_per_it, dummy);	//passing dummy to prevent optimization
 	else
-		printf ("%lld\t%f\n", size*sizeof(void*), clocks_per_it, dummy);	//passing dummy to prevent optimization
+		printf ("%lld %f\n", size*sizeof(void*), clocks_per_it, dummy);	//passing dummy to prevent optimization
 	fflush(stdout);
 	return clocks_per_it;
 }   
@@ -205,10 +203,8 @@ static double run_dtlb(long long size, int ITS)
 		
 	int clen = 1;
 	for (p = *(void**)p; p != j; clen++,p = *(void**)p);
-	printf ("%d\t", clen);
+	printf ("%d ", clen);
 	
-	putchar (' '); fflush(stdout);
-
 	long long start = rdtsc();
 	
 	for (int i=ITS;i;i--)
@@ -238,7 +234,7 @@ static double run_dtlb(long long size, int ITS)
 	last_size = size;
 
 	
-	printf ("%lld\t%f\n", size*sizeof(void*), clocks_per_it, dummy);	//passing dummy to prevent optimization
+	printf ("%lld %f\n", size*sizeof(void*), clocks_per_it, dummy);	//passing dummy to prevent optimization
 	fflush(stdout);
 	return clocks_per_it;
 }   
@@ -396,7 +392,7 @@ int main(int argc, char ** argv)
 		// Sweep offsets.
 		for (long long i = opts.start_offset ; i < opts.stop_offset; i+= 64/sizeof(void*))	//hard-coded for 64-byte cache lines
 		{
-			printf ("%lld\t", i);
+			printf ("%lld ", i);
 			pos = &array[i];
 			double cpi = runtest(opts, size, its);
 			its = (int)(SPEED/cpi);
@@ -405,7 +401,7 @@ int main(int argc, char ** argv)
 		
 		for (long long i = opts.stop_offset ; i > opts.start_offset; i-= 64/sizeof(void*))	//hard-coded for 64-byte cache lines
 		{
-			printf ("%lld\t", i);
+			printf ("%lld ", i);
 			pos = &array[i];
 			double cpi = runtest(opts, size, its);
 			its = (int)(SPEED/cpi);
@@ -421,7 +417,7 @@ int main(int argc, char ** argv)
 		while (true)
 		{
 			long long i = my_rand(opts.stop_offset);
-			printf ("%lld\t", i);
+			printf ("%lld ", i);
 			pos = &array[i];
 			double cpi = runtest(opts, size, its);
 			its = (int)(SPEED/cpi);
