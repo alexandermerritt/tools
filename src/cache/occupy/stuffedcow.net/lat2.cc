@@ -86,7 +86,6 @@ static double run_randlat(long long size, int ITS)
 			array[k] = temp;
 		}
 		register void *j = pos, *k = pos;
-		putchar (' '); fflush(stdout);
 
 		// Dual pointer chase with some offset to foil adaptive cache replacement policy, if any. 
 		// Touches each address twice with some delay between them to make
@@ -146,7 +145,6 @@ static double run_randlat(long long size, int ITS)
 		static void *addrs[MIN_ITS*16];
 		for (int i=0;i<MIN_ITS*16;i++)
 			addrs[i] = array + my_rand(size);
-		putchar (' '); fflush(stdout);
 
 		long long start = rdtsc();
 		
@@ -182,7 +180,7 @@ static double run_randlat(long long size, int ITS)
 	//printf ("%5d KB: clocks = %f\n", size*(sizeof(void*))/1024, (double)(stop-start)/(ITS<<4), j);
 	
 	
-	printf ("%lld\t%f\n", size*sizeof(void*), clocks_per_it, dummy);	//passing dummy to prevent optimization
+	printf ("%lld %f\n", size*sizeof(void*), clocks_per_it, dummy);	//passing dummy to prevent optimization
 	fflush(stdout);
 	return clocks_per_it;
 }   
