@@ -1,0 +1,106 @@
+#! /usr/bin/env python
+
+import subprocess as sp
+import sys
+
+renames = {
+        'PAGE_WALKER_LOADS_DTLB_L1'         : 'n.dtlb.l1',
+        'PAGE_WALKER_LOADS_DTLB_L2'         : 'n.dtlb.l2',
+        'PAGE_WALKER_LOADS_DTLB_L3'         : 'n.dtlb.l3',
+        'PAGE_WALKER_LOADS_DTLB_MEMORY'     : 'n.dtlb.mem',
+        'INSTR_RETIRED_ANY'                 : 'instr.retired',
+        'CPU_CLK_UNHALTED_REF'              : 'clk.ref',
+        'CPU_CLK_UNHALTED_CORE'             : 'clk.core',
+        'DTLB_LOAD_MISSES_WALK_DURATION'    : 'dtlb.ld.clk',
+        'DTLB_STORE_MISSES_WALK_DURATION'   : 'dtlb.st.clk',
+        'ITLB_MISSES_WALK_DURATION'         : 'itlb.clk',
+        }
+
+cmds = {
+        'walkhits' : 'PAGE_WALKER_LOADS_DTLB_L1:PMC0'
+            + ',PAGE_WALKER_LOADS_DTLB_L2:PMC1'
+            + ',PAGE_WALKER_LOADS_DTLB_L3:PMC2'
+            + ',PAGE_WALKER_LOADS_DTLB_MEMORY:PMC3',
+        'walkstalls' : 'DTLB_LOAD_MISSES_WALK_DURATION:PMC0'
+            + ',DTLB_STORE_MISSES_WALK_DURATION:PMC1'
+            + ',ITLB_MISSES_WALK_DURATION:PMC2',
+        }
+
+DATA_COL = 2
+SPLIT_ON = ','
+
+def dump(data):
+    out = []
+    keys = data.keys()
+    out.append( ' '.join(keys) )
+    vals = [ data[k] for k in keys ]
+    out.append( ' '.join(vals) )
+    return out
+
+def parse_simple(text):
+    data = {}
+    for line in text:
+        print('# ' + line.strip())
+        fields = line.strip().split(SPLIT_ON)
+        if len(fields) < 2:
+            continue
+        if fields[0] not in renames:
+            continue
+        f = renames[fields[0]]
+        data[ f ] = fields[DATA_COL]
+    print( '\n'.join( dump(data) ) )
+
+def parse_regions(text):
+    out = []
+    data = {}
+    for line in text:
+        print('# ' + line.strip())
+        fields = line.strip().split(SPLIT_ON)
+        if len(fields) < 2:
+            continue
+        if fields[1] == 'Custom': # new region
+            keys = data.keys()
+            if len(keys) > 0:
+                out.extend( dump(data) )
+            data = { 'reg.name' : fields[-1] }
+        if fields[0] not in renames:
+            continue
+        f = renames[fields[0]]
+        data[ f ] = fields[DATA_COL]
+    print( '\n'.join( out ) )
+
+# ---- Start Here ----
+
+if len(sys.argv) == 1:
+    print('Specify action: ' + ' '.join(cmds.keys()))
+    sys.exit(1)
+
+if sys.argv[1] not in cmds:
+    print('Invalid action')
+    sys.exit(1)
+
+flags = cmds[sys.argv[1]]
+
+if len(sys.argv) <= 2:
+    print('Specify command and arguments')
+    sys.exit(1)
+
+addl = sys.argv[2:]
+
+name = sys.argv[0]
+if '/' in name:
+    fields = name.split('/')
+    name = fields[-1]
+use_regions = (name == 'lw.reg')
+if use_regions:
+    addl.insert(0, '-m')
+
+cmd = ['likwid-perfctr', '-C', '0', '-O', '-g', flags]
+cmd.extend(addl)
+out = sp.check_output(cmd, universal_newlines=True)
+lines = out.split('\n')
+if use_regions:
+    parse_regions(lines)
+else:
+    parse_simple(lines)
+
