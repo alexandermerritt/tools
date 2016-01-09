@@ -162,7 +162,114 @@ cpuid(unsigned int leaf, unsigned int subleaf, struct regs &r)
             );
 }
 
-void qos_monitoring(void)
+void cpuid7(void)
+{
+    struct regs r;
+
+    printf("\nStructured Extended Feature Flags Enumeration Leaf\n\n");
+
+    memset(&r, 0, sizeof(r));
+    r.ecx = 0;
+    cpuid(7, r);
+
+#define     ENABLED_STR(v)  ((v) ? "enabled" : "not available")
+
+    // put other EBX/ECX bits here you want to check
+    unsigned int max_leaf = r.eax;
+    printf("   max leaf:    %u\n", max_leaf);
+
+    bool has_cmt = ((r.ebx >> 12) & 0x1);
+    printf("        PQM:    %s\n", ENABLED_STR(has_cmt));
+    if (has_cmt) {
+        struct regs r2;
+        memset(&r2, 0, sizeof(r2));
+        r2.ecx = 0x0;
+        cpuid(0xf, r2);
+        unsigned int max_rmid = (r2.ebx & 0xffffffff);
+        printf("              max RMID (all types):   %u\n", max_rmid);
+        printf("              L3 monitoring:          %s\n",
+                ENABLED_STR((r2.edx >> 1) & 0x1));
+
+        // L3 monitoring; TODO as EDX reports more, query those sub-leaves
+        memset(&r2, 0, sizeof(r2));
+        r2.ecx = 0x1;
+        cpuid(0xf, r2);
+        // IA32_QM_CTR * upscaling factor = bytes used in L3
+        printf("                  upscaling factor:       %u (to bytes)\n", (r2.ebx & 0xffffffff));
+        printf("                  max RMID:               %u\n", (r2.ecx));
+        printf("                  L3 total BW:            %s\n", ENABLED_STR((r2.edx)));
+        printf("                  L3 local BW:            %s\n", ENABLED_STR((r2.edx)));
+    }
+
+    bool has_cat = ((r.ebx >> 15) & 0x1);
+    printf("        PQE:    %s\n", ENABLED_STR(has_cat));
+    if (has_cat) {
+        struct regs r2;
+        memset(&r2, 0, sizeof(r2));
+        r2.ecx = 0x0;
+        cpuid(10, r2);
+        unsigned int res_id = (r2.ebx >> 1) & 0x1;
+        printf("              ResID:                  %s\n", ENABLED_STR(res_id));
+
+        memset(&r2, 0, sizeof(r2));
+        r2.ecx = res_id;
+        cpuid(10, r2);
+        printf("              len of cap. bitmask:    %u\n", (r2.eax & 0xf) + 1);
+        printf("              bit-granular map:       0x%x\n", (r2.ebx & 0xffffffff));
+        printf("              updates to COS:         %s\n",
+                ((r2.ebx >> 1) & 0x1) ? "should be infrequent" : "n/a");
+        printf("              highest COS for ResID:  %u\n", (r2.edx & 0x7fff) + 1);
+    }
+
+    printf("\n");
+}
+
+void cpuid808(void)
+{
+    struct regs r;
+
+    memset(&r, 0, sizeof(r));
+    cpuid(0x80000008, r);
+
+    printf("\n CPU Addressable Bits\n");
+
+    printf("\n");
+    printf("    Physical bits:  %u\n", (r.eax & 0xff));
+    printf("      Linear bits:  %u\n", ((r.eax >> 8) & 0xff));
+
+    printf("\n");
+}
+
+void cpuid1(void)
+{
+    struct regs r;
+
+    memset(&r, 0, sizeof(r));
+    cpuid(1, r);
+
+    printf("\n CPU Version Information (partial)\n");
+
+    printf("\n");
+    printf("    Stepping ID:    %u\n", (r.eax & 0x1f));
+    printf("          Model:    %u\n", ((r.eax >> 4) & 0xf));
+    printf("      Family ID:    %u\n", ((r.eax >> 8) & 0xf));
+    printf(" Processor Type:    %u\n", ((r.eax >> 12) & 0x3));
+    printf("  Ext. Model ID:    %u\n", ((r.eax >> 16) & 0xf));
+    printf(" Ext. Family ID:    %u\n", ((r.eax >> 20) & 0xff));
+
+    printf("\n");
+    printf("        CLFLUSH:    %u (instruction supported?)\n", ((r.edx >> 19) & 0x1));
+    printf("   CLFLUSH size:    %u\n", ((r.ebx >> 8) & 0xff) << 3);
+
+    printf("\n");
+    printf(" Page Size Ext.:    %u (4MB pages?)\n", ((r.edx >> 3) & 0x1));
+    printf("  Page Glbl Bit:    %u\n", ((r.edx >> 13) & 0x1));
+    printf("            PAT:    %u\n", ((r.edx >> 16) & 0x1));
+
+    printf("\n");
+}
+
+void cpuid2(void)
 {
     struct regs r;
     memset(&r, 0, sizeof(r));
@@ -316,7 +423,7 @@ void cpuid4(void)
         val = (r.eax >> 8) & 0x1;
         printf("self-init:          %d\n", val);
         val = (r.eax >> 9) & 0x1;
-        printf("full ass:           %d\n", val);
+        printf("full assoc:         %d\n", val);
         // bits 13-10 reserved
         val = (r.eax >> 14) & 0xfff;
         printf("max id:             %d [1]\n", val+1);
@@ -329,7 +436,7 @@ void cpuid4(void)
         val = (r.ebx >> 12) & 0x3ff;
         printf("line partitions:    %d\n", val+1);
         val = (r.ebx >> 22) & 0x3ff;
-        printf("ways of ass:        %d\n", val+1);
+        printf("ways of assoc:      %d\n", val+1);
 
         // parse ECX
         val = (r.ecx) & 0xffffffff;
@@ -351,8 +458,21 @@ void cpuid4(void)
 
 int main(int argc __unused, char *argv[] __unused)
 {
-    cpuid2();
-    cpuid4();
-    features();
+    if (argc != 2) {
+        fprintf(stderr, "Error: specify cpuid function\n");
+        return -1;
+    }
+    unsigned int func = atoi(argv[1]);
+    switch(func) {
+        case 1: { cpuid1(); break; }
+        case 2: { cpuid2(); break; }
+        case 4: { cpuid4(); break; }
+        case 7: { cpuid7(); break; }
+        case 808: { cpuid808(); break; }
+        default: {
+            fprintf(stderr, "Error: only supported are 2 and 4\n");
+            return -1;
+        }
+    };
     return 0;
 }
