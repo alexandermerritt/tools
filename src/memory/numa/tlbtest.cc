@@ -82,7 +82,7 @@ int tlb(size_t bytes, size_t page_shift)
     // put the indexes into the area directly
     cout << "# injecting idx" << endl;
     //LIKWID_MARKER_START("region_inject");
-    struct page12 *pages = (struct page12 *)addr;
+    volatile struct page12 *pages = (struct page12 *)addr;
     for (unsigned int pg = 0; pg < npages; pg++)
         pages[pg].u.idx = pidx[pg];
     //LIKWID_MARKER_STOP("region_inject");
@@ -95,9 +95,16 @@ int tlb(size_t bytes, size_t page_shift)
     LIKWID_MARKER_START("region_exec");
     clock_gettime(CLOCK_REALTIME, &t1);
     unsigned int niters = (npages << 5);
-    volatile unsigned int next = 0;
-    for (unsigned int i = 0; i < niters; i++)
-        next = pages[next].u.idx;
+    if (niters < 4096)
+        niters = 4096;
+    unsigned int next = 0;
+#define TOUCH   next = pages[next].u.idx
+#define N2      TOUCH ; TOUCH
+#define N8      N2;N2;N2;N2
+#define N64     N8;N8;N8;N8;N8;N8;N8;N8
+    for (unsigned int i = 0; i < niters; i++) {
+        N64;
+    }
     clock_gettime(CLOCK_REALTIME, &t2);
     LIKWID_MARKER_STOP("region_exec");
 
@@ -109,10 +116,29 @@ int tlb(size_t bytes, size_t page_shift)
     return 0;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s npages pinYN\n", *argv);
+        return 1;
+    }
+
+    unsigned long npages = strtol(argv[1], NULL, 10);
+    bool pin = (argv[2][0] == 'y');
+
     LIKWID_MARKER_INIT;
-    if (tlb(1UL<<14, 12)) return 1;
+
+    if (pin) {
+        cpu_set_t mask;
+        CPU_ZERO(&mask);
+        CPU_SET(0, &mask);
+        if (sched_setaffinity(getpid(), sizeof(mask), &mask))
+            return 1;
+    }
+
+    if (tlb(npages << 12, 12)) return 1;
+
     LIKWID_MARKER_CLOSE;
+
     return 0;
 }
