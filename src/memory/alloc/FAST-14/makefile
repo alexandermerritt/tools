@@ -1,13 +1,22 @@
-#CXX := g++
-CXX := /opt/rh/devtoolset-4/root/usr/bin/g++
+# Configure the path to your gcc appropriately.
+# If you want to build the live testing for Redis, do
+#  	make WITH_REDIS=1
+
+CXX := g++
+#CXX := /opt/rh/devtoolset-4/root/usr/bin/g++
 CXXFLAGS := -O3 -Wall -Wextra -std=c++11  -fdiagnostics-color=auto -pedantic\
 	-Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 HOME := /home/merrital
 LDFLAGS := -L/usr/lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/local/include -L$(HOME)/local/lib
-LIBS := -lredox -lev
+LIBS :=
 
 DEPS := makefile
-TARGETS := libctest jetest tctest sutest hoardtest redistest
+TARGETS := libctest jetest tctest sutest hoardtest
+
+ifeq ($(WITH_REDIS),1)
+TARGETS += redistest
+LIBS += -lredox -lev
+endif
 
 .PHONY:	all
 all:	$(TARGETS)

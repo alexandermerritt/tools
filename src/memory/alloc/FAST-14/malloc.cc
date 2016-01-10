@@ -8,6 +8,9 @@
  * Log-structured memory for DRAM-based storage. In Proceedings of the
  * 12th USENIX conference on File and Storage Technologies (FAST'14).
  * USENIX Association, Berkeley, CA, USA, 1-16.
+ *
+ * Specify -DWITH_REDIS if you want to include the Redis evaluation.
+ * Requires a hack to the Redis sources, however.
  */
 
 #include <fstream>
@@ -21,7 +24,9 @@
 #include <iomanip>
 #include <map>
 
+#if defined(WITH_REDIS)
 #include <redox.hpp>
+#endif
 
 #include <cassert>
 #include <cstddef>
@@ -35,6 +40,7 @@
 
 using namespace std;
 
+#if defined(WITH_REDIS)
 // Make sure to configure redis with some policy to drop values if max
 // memory limit has been reached, for example:
 //      maxmemory-policy allkeys-random
@@ -50,6 +56,7 @@ using namespace std;
 
 #define REDIS_BATCH_COUNT   1
 #define REDIS_SYNC_EVERY    1
+#endif  /* WITH_REDIS */
 
 #define KB  (1UL<<10)
 #define MB  (1UL<<20)
@@ -249,6 +256,7 @@ class LiveSet
         LiveSet();
 };
 
+#if defined(WITH_REDIS)
 class RedisSet
 {
     public:
@@ -520,6 +528,7 @@ class RedisSet
             ifs.close();
         }
 };
+#endif  /* WITH_REDIS */
 
 // Generator for the number lambda funcs to use.
 static random_device rd;
@@ -591,6 +600,7 @@ void dumpstatsL(const char *prog, const char *test,
             liveset->nobjs, liveset->clk/1e6);
 }
 
+#if defined(WITH_REDIS)
 void dumpstats(const char *test,
         long injectwss, RedisSet *redis)
 {
@@ -612,6 +622,7 @@ void dumpstats(const char *test,
             mem/MB, wss/MB, eff, info->at("keys"));
     delete info;
 }
+#endif  /* WITH_REDIS */
 
 void sizes_on_stdin(deque<long> &values)
 {
@@ -623,6 +634,7 @@ void sizes_on_stdin(deque<long> &values)
     }
 }
 
+#if defined(WITH_REDIS)
 // we can carelessly allocate memory in this process when evaluting
 // redis, because redis is in another process (and we are not
 // measuring self)
@@ -717,12 +729,16 @@ int doredis(int narg, char *args[])
     delete redis;
     return 0;
 }
+#endif  /* WITH_REDIS */
 
 int main(int narg, char *args[])
 {
     string name(*args);
+
+#if defined(WITH_REDIS)
     if (name == "./redistest")
         return doredis(narg, args);
+#endif
 
     if (narg != 4) {
         cerr << "Usage: " << *args
