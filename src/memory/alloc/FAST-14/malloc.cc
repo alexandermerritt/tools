@@ -840,22 +840,9 @@ int main(int narg, char *args[])
         LiveSet::numGen_f LFW2 = [] () -> long {
             return 187500L;
         };
-        //liveset->injectValues(LFW, injectwss);
-        //liveset->injectValues(LFW2, injectwss);
-
-        LiveSet::numGen_f LFWx = [] () -> long {
-            const float lfw_mean = 14234, lfw_sd = 2271;
-            static normal_distribution<float> d(lfw_mean, lfw_sd);
-            static uniform_real_distribution<float> g(1.1, 0.2);
-            static long i = 0L;
-            switch (i%2) {
-                case 0:
-                    return d(gen); // the image
-                default:
-                    return d(gen) * (187500L * g(gen)); // the analytics
-            }
-        };
-        liveset->injectValues(LFWx, injectwss);
+        liveset->injectValues(LFW, injectwss);
+        liveset->drop(livewss * 0.9);
+        liveset->injectValues(LFW2, injectwss);
     } else {
         cerr << "Unknown workload to run." << endl;
         exit(1);
