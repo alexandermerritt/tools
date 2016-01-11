@@ -3,7 +3,6 @@
 #  	make WITH_REDIS=1
 
 CXX := g++
-#CXX := /opt/rh/devtoolset-4/root/usr/bin/g++
 CXXFLAGS := -O3 -Wall -Wextra -std=c++11  -fdiagnostics-color=auto -pedantic\
 	-Wno-unused-parameter -Wno-unused-function -Wno-unused-variable
 HOME := /home/merrital
