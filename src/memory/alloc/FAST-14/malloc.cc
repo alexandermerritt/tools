@@ -227,8 +227,9 @@ class LiveSet
         }
 
         size_t overhead() {
-            return ceil4K(nlocs*sizeof(*locs))
-                + ceil4K(nlocs*sizeof(*sizes))
+            return ceil4K(nlocs*sizeof(*locs)) // locs array
+                + ceil4K(nlocs*sizeof(*sizes)) // sizes array
+                // obj instance (includes freelist)
                 + ceil4K(sizeof(LiveSet));
         }
 
@@ -830,7 +831,6 @@ int main(int narg, char *args[])
 
         // http://vis-www.cs.umass.edu/lfw/
         LiveSet::numGen_f LFW = [] () -> long {
-            const float lfw_min = 7648, lfw_max = 26450;
             const float lfw_mean = 14234, lfw_sd = 2271;
             static normal_distribution<float> d(lfw_mean, lfw_sd);
             long v = static_cast<long>(d(gen));
