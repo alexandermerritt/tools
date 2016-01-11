@@ -1,0 +1,68 @@
+Executed on HP's puff machine:
+
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 63
+model name	: Intel(R) Xeon(R) CPU E7-8890 v3 @ 2.50GHz
+stepping	: 4
+microcode	: 0x9
+cpu MHz		: 2599.902
+cache size	: 46080 KB
+physical id	: 0
+
+288 physical cores (288/18 = 16 sockets)
+
+MemTotal:       12551086452 kB
+MemFree:        12494216740 kB
+MemAvailable:   12499217604 kB
+Buffers:            3636 kB
+Cached:          4901652 kB
+SwapCached:            0 kB
+Active:         23603924 kB
+Inactive:        3175164 kB
+Active(anon):   21908312 kB
+Inactive(anon):    22972 kB
+
+Workload:
+    allocate encoded LFW
+    del 90%
+    allocate decoded LFW
+
+merrital@smaug-3 1 alloc/FAST-14 % (master) for t in *test; do ./$t img  $((1<<33)) $((1<<38)); sleep 4; done
+prog cmd live inject mem wss eff LSoverhead nobjs clk_ms
+./hoardtest img 8191.12 262144.00 22782.86 18968.15 2.3157 3814.71 45809 6724.461
+./jetest img 8191.12 262144.00 17679.27 13864.56 1.6926 3814.71 45809 1717.487
+./libctest img 8191.12 262144.00 13142.65 9327.94 1.1388 3814.71 45809 22814.246
+./sutest img 8191.12 262144.00 29290.00 25475.29 3.1101 3814.71 45809 1496.353
+./tctest img 8191.12 262144.00 16601.26 12786.55 1.5610 3814.71 45809 1474.857
+
+merrital@smaug-3 130 alloc/FAST-14 % (master) for t in *test; do ./$t img  $((1<<40)) $((1<<43)); sleep 4; done
+prog cmd live inject mem wss eff LSoverhead nobjs clk_ms
+./hoardtest img 1048575.12 8388608.00 2419301.00 2415486.25 2.3036 3814.71 5879183 17768077.161
+./jetest img 1048575.12 8388608.00 1774107.25 1770292.50 1.6883 3814.71 5879073 205959.003
+./libctest img 1048575.25 8388608.00 1548278.25 1544463.50 1.4729 3814.71 5879077 13052479.495
+./sutest img 1048575.25 8388608.00 3165580.00 3161765.25 3.0153 3814.71 5879181 101915.331
+./tctest img 1048575.19 8388608.00 1615778.25 1611963.50 1.5373 3814.71 5879068 193702.015
+
+Workload:
+    allocate encoded LFW
+    allocate decoded LFW
+
+merrital@smaug-3 1 f2/lfw-img-alloc-alloc % (master)  for t in *test; do ./$t img  $((1<<33)) $((1<<38)); sleep 1; done
+prog cmd live inject mem wss eff LSoverhead nobjs clk_ms
+./hoardtest img 8191.13 262144.00 22778.40 18963.69 2.3152 3814.71 45809 12920.243
+./jetest img 8191.12 262144.00 19515.27 15700.56 1.9168 3814.71 45809 3455.733
+./libctest img 8191.12 262144.00 17683.41 13868.70 1.6931 3814.71 45809 21643.835
+./sutest img 8191.12 262144.00 29310.00 25495.29 3.1126 3814.71 45809 -503.970
+./tctest img 8191.12 262144.00 18506.26 14691.55 1.7936 3814.71 45809 3351.784
+
+merrital@smaug-3 130 f2/lfw-img-alloc-alloc % (master)  for t in *test; do ./$t img  $((1<<40)) $((1<<43)); sleep 1; done
+prog cmd live inject mem wss eff LSoverhead nobjs clk_ms
+./hoardtest img 1048575.12 8388608.00 2418570.00 2414755.25 2.3029 3814.71 5928692 17852230.571
+./jetest img 1048575.19 8388608.00 2008359.25 2004544.50 1.9117 3814.71 5928395 186457.677
+./libctest img 1048575.25 8388608.00 1771071.75 1767257.00 1.6854 3814.71 5928795 19654103.809
+./sutest img 1048575.19 8388608.00 3164642.00 3160827.25 3.0144 3814.71 5928754 93295.277
+./tctest img 1048575.19 8388608.00 1872989.25 1869174.50 1.7826 3814.71 5929048 170700.465
+
+
