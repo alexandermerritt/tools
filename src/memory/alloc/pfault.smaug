@@ -1,0 +1,164 @@
+# nthreads 1 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12      18533504243  18.533504     1104
+# nthreads 2 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12      10205809416  10.205809      608
+# nthreads 4 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12       5545387938  5.545388      330
+# nthreads 8 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12       3025541647  3.025542      180
+# nthreads 16 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12       2923646856  2.923647      174
+# nthreads 32 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12       2971695634  2.971696      177
+# nthreads 64 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12       1590545190  1.590545       94
+# nthreads 128 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12        808352556  0.808353       48
+# nthreads 256 len 68719476736 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+     68719476736  12        422462355  0.422462       25
+# nthreads 1 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12      37150416157  37.150416     1107
+# nthreads 2 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12      19336625913  19.336626      576
+# nthreads 4 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12      10070076920  10.070077      300
+# nthreads 8 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12       6080212471  6.080212      181
+# nthreads 16 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12       5817870730  5.817871      173
+# nthreads 32 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12       5839268154  5.839268      174
+# nthreads 64 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12       3040520622  3.040521       90
+# nthreads 128 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12       3060766781  3.060767       91
+# nthreads 256 len 137438953472 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    137438953472  12        819292185  0.819292       24
+# nthreads 1 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12      74137922104  74.137922     1104
+# nthreads 2 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12      37164242359  37.164242      553
+# nthreads 4 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12      20080972304  20.080972      299
+# nthreads 8 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12      14014430079  14.014430      208
+# nthreads 16 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12      16967340175  16.967340      252
+# nthreads 32 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12      11542858331  11.542858      172
+# nthreads 64 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12       5957764515  5.957765       88
+# nthreads 128 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12       6659930574  6.659931       99
+# nthreads 256 len 274877906944 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    274877906944  12       3144608781  3.144609       46
+# nthreads 1 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12     266413473334  266.413473     1984
+# nthreads 2 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12      93525531320  93.525531      696
+# nthreads 4 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12      67441792925  67.441793      502
+# nthreads 8 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12      48113253445  48.113253      358
+# nthreads 16 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12      48404363242  48.404363      360
+# nthreads 32 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12      40885394964  40.885395      304
+# nthreads 64 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12      15501304068  15.501304      115
+# nthreads 128 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12      16957418670  16.957419      126
+# nthreads 256 len 549755813888 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+    549755813888  12       7842054471  7.842054       58
+# nthreads 1 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12     774005124076  774.005124     2883
+# nthreads 2 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12     393945766363  393.945766     1467
+# nthreads 4 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12     272589190634  272.589191     1015
+# nthreads 8 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12     157917351518  157.917352      588
+# nthreads 16 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12     103996578504  103.996579      387
+# nthreads 32 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12      93889621526  93.889622      349
+# nthreads 64 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12      60766425346  60.766425      226
+# nthreads 128 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12      44167854930  44.167855      164
+# nthreads 256 len 1099511627776 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   1099511627776  12      20946463636  20.946464       78
+# nthreads 1 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12    1793514867388  1793.514867     3340
+# nthreads 2 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12     903980041456  903.980041     1683
+# nthreads 4 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12     626419094582  626.419095     1166
+# nthreads 8 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12     263153194709  263.153195      490
+# nthreads 16 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12     222579796144  222.579796      414
+# nthreads 32 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12     209062557276  209.062557      389
+# nthreads 64 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12     171680519562  171.680520      319
+# nthreads 128 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12     124290313619  124.290314      231
+# nthreads 256 len 2199023255552 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)
+   2199023255552  12      67769725398  67.769725      126
+# nthreads 1 len 4398046511104 pgshift 12
+len pgshift time(ns) time(s) rate(ns/pg)

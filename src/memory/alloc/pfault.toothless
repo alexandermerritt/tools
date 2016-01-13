@@ -1,4 +1,4 @@
-# merrital@smaug-2 0 memory/alloc % (master) for ((n=36;n<=43;n++)); do for ((t=1;t<=256;t=t*2)); do sudo c $((1<<$n)); done ; done
+# merrital@smaug-2 0 memory/alloc % (master) for ((n=36;n<=43;n++)); do for ((t=1;t<=256;t=t*2)); do sudo chrt --rr 90 ./pfault $t $((1<<$n)); done ; done
 # nthreads 1 len 68719476736 pgshift 12
 len pgshift time(ns) time(s) rate(ns/pg)
 68719476736 12 29819675100 29.819675 1777
