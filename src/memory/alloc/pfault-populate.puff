@@ -1,0 +1,12 @@
+len map.time(ns) map.time(s) map.rate(ns/pg) unmap.time(ns) unmap.time(s)
+68719476736 25165099996 25.165100 1499 2018353226 2.018353
+len map.time(ns) map.time(s) map.rate(ns/pg) unmap.time(ns) unmap.time(s)
+137438953472 50567307130 50.567307 1507 4035619322 4.035619
+len map.time(ns) map.time(s) map.rate(ns/pg) unmap.time(ns) unmap.time(s)
+274877906944 101095857700 101.095858 1506 8066262911 8.066263
+len map.time(ns) map.time(s) map.rate(ns/pg) unmap.time(ns) unmap.time(s)
+549755813888 205021838853 205.021839 1527 16156364190 16.156364
+len map.time(ns) map.time(s) map.rate(ns/pg) unmap.time(ns) unmap.time(s)
+1099511627776 503381641299 503.381641 1875 32587092998 32.587093
+len map.time(ns) map.time(s) map.rate(ns/pg) unmap.time(ns) unmap.time(s)
+2199023255552 1520177638612 1520.177639 2831 66539143179 66.539143

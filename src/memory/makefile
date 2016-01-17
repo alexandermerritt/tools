@@ -1,5 +1,5 @@
-CXX = clang++
-CXXFLAGS = -O2 -std=c++11 -Wall -Werror -Wextra
+CXX = g++
+CXXFLAGS = -O2 -std=c++11 -Wall -Werror -Wextra -DLIKWID_PERFMON -g
 CXXFLAGS += -Wno-unused-variable -Wno-unused-function
 
 EXES = tlbtest cpuid htable list deque sort mmap
@@ -21,7 +21,7 @@ htable:	htable.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 tlbtest:	tlbtest.o
-	$(CXX) $(CXXFLAGS) tlbtest.o -o $@
+	$(CXX) $^ -o $@ -L/usr/local/lib -llikwid -lm
 
 cpuid:	cpuid.o
 	$(CXX) $(CXXFLAGS) cpuid.o -o $@
