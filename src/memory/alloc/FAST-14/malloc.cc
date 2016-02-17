@@ -843,6 +843,12 @@ int main(int narg, char *args[])
         liveset->injectValues(LFW, injectwss);
         liveset->drop(livewss * 0.9);
         liveset->injectValues(LFW2, injectwss);
+    } else if (cmd == "cust") {
+        LiveSet::numGen_f vfn1 = [] () -> long { return 500000; };
+        LiveSet::numGen_f vfn2 = [] () -> long { return 600000; };
+        liveset->injectValues(vfn1, injectwss);
+        liveset->drop(livewss * 0.9);
+        liveset->injectValues(vfn2, injectwss);
     } else {
         cerr << "Unknown workload to run." << endl;
         exit(1);
