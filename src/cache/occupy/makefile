@@ -1,7 +1,7 @@
 CC := gcc
 CFLAGS := -O3 -std=gnu11
 CFLAGS += -march=native -mtune=native
-CFLAGS += -msse4.2 -mavx2 -fomit-frame-pointer
+CFLAGS += -msse4.2 -fomit-frame-pointer
 LDFLAGS :=
 
 all:	occupy array-stride
