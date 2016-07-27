@@ -21,6 +21,7 @@
 #endif
 #include <sched.h>
 
+#include <assert.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -80,7 +81,7 @@ struct node
 #define _next1k(_item) \
         _next512(_item); _next512(_item)
 
-#define ITERS   (1<<12)
+#define ITERS   (1<<14)
 #define unroll(_item)   _next512(_item)
 
 int __test_rand_list(size_t l3, double *cycles)
@@ -125,14 +126,23 @@ int __test_rand_list(size_t l3, double *cycles)
     head = &nodes[ idx[0] ];
     { unroll(head); }
 
+    // factor out the loop cost
+    c1 = rdtscp();
+    for (long i = 0; i < ITERS; i++) {
+        asm volatile ("nop" : : : );
+    }
+    size_t loop = rdtscp()-c1;
+    assert(loop > 0);
+
     head = &nodes[ idx[0] ];
     c1 = rdtscp();
     for (long i = 0; i < ITERS; i++) {
         unroll(head);
     }
     c2 = rdtscp();
+    assert((c2-c1)>loop);
 
-    *cycles = (double)(c2-c1)/(ITERS * 512);
+    *cycles = (double)(c2-c1-loop)/(ITERS * 512);
     return 0;
 }
 
@@ -146,7 +156,7 @@ double mean(double *v, int n)
 
 int test_rand_list(size_t from, size_t to, size_t incr)
 {
-    const int niter = 8;
+    const int niter = 3;
     double v[niter];
     for (size_t at = from; at <= to; at+=incr) {
         for (int i = 0; i < niter; i++) {
