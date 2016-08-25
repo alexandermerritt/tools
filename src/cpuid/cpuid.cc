@@ -169,8 +169,7 @@ void cpuid7(void)
     printf("\nStructured Extended Feature Flags Enumeration Leaf\n\n");
 
     memset(&r, 0, sizeof(r));
-    r.ecx = 0;
-    cpuid(7, r);
+    cpuid(7, 0, r);
 
 #define     ENABLED_STR(v)  ((v) ? "enabled" : "not available")
 
@@ -183,8 +182,7 @@ void cpuid7(void)
     if (has_cmt) {
         struct regs r2;
         memset(&r2, 0, sizeof(r2));
-        r2.ecx = 0x0;
-        cpuid(0xf, r2);
+        cpuid(0xf, 0, r2);
         unsigned int max_rmid = (r2.ebx & 0xffffffff);
         printf("              max RMID (all types):   %u\n", max_rmid);
         printf("              L3 monitoring:          %s\n",
@@ -192,8 +190,7 @@ void cpuid7(void)
 
         // L3 monitoring; TODO as EDX reports more, query those sub-leaves
         memset(&r2, 0, sizeof(r2));
-        r2.ecx = 0x1;
-        cpuid(0xf, r2);
+        cpuid(0xf, 1, r2);
         // IA32_QM_CTR * upscaling factor = bytes used in L3
         printf("                  upscaling factor:       %u (to bytes)\n", (r2.ebx & 0xffffffff));
         printf("                  max RMID:               %u\n", (r2.ecx));
@@ -206,14 +203,12 @@ void cpuid7(void)
     if (has_cat) {
         struct regs r2;
         memset(&r2, 0, sizeof(r2));
-        r2.ecx = 0x0;
-        cpuid(10, r2);
+        cpuid(10, 0, r2);
         unsigned int res_id = (r2.ebx >> 1) & 0x1;
         printf("              ResID:                  %s\n", ENABLED_STR(res_id));
 
         memset(&r2, 0, sizeof(r2));
-        r2.ecx = res_id;
-        cpuid(10, r2);
+        cpuid(10, res_id, r2);
         printf("              len of cap. bitmask:    %u\n", (r2.eax & 0xf) + 1);
         printf("              bit-granular map:       0x%x\n", (r2.ebx & 0xffffffff));
         printf("              updates to COS:         %s\n",
@@ -229,7 +224,7 @@ void cpuid808(void)
     struct regs r;
 
     memset(&r, 0, sizeof(r));
-    cpuid(0x80000008, r);
+    cpuid(0x80000008, 0, r);
 
     printf("\n CPU Addressable Bits\n");
 
@@ -245,7 +240,7 @@ void cpuid1(void)
     struct regs r;
 
     memset(&r, 0, sizeof(r));
-    cpuid(1, r);
+    cpuid(1, 0, r);
 
     printf("\n CPU Version Information (partial)\n");
 
@@ -269,6 +264,7 @@ void cpuid1(void)
     printf("\n");
 }
 
+#if 0
 void cpuid2(void)
 {
     struct regs r;
@@ -293,6 +289,7 @@ void cpuid2(void)
         // add other L3 monitoring capabilities
     }
 }
+#endif
 
 void qos_enforce(void)
 {
@@ -331,7 +328,7 @@ void features(void)
             printf("\t%s\n", EXTFEAT[i]);
         }
     }
-    qos_monitoring();
+    //qos_monitoring();
     qos_enforce();
 }
 
@@ -456,13 +453,23 @@ void cpuid4(void)
 
 }
 
-int main(int argc __unused, char *argv[] __unused)
+void usage(char *args[]) {
+    fprintf(stderr,
+            "\n"
+            "Usage: %s function\n"
+            "\n"
+            "\tfunction: [1 2 4 7 808]\n"
+            "\n",
+            *args);
+}
+
+int main(int narg, char *args[])
 {
-    if (argc != 2) {
-        fprintf(stderr, "Error: specify cpuid function\n");
+    if (narg != 2) {
+        usage(args);
         return -1;
     }
-    unsigned int func = atoi(argv[1]);
+    unsigned int func = atoi(args[1]);
     switch(func) {
         case 1: { cpuid1(); break; }
         case 2: { cpuid2(); break; }
@@ -470,7 +477,7 @@ int main(int argc __unused, char *argv[] __unused)
         case 7: { cpuid7(); break; }
         case 808: { cpuid808(); break; }
         default: {
-            fprintf(stderr, "Error: only supported are 2 and 4\n");
+            usage(args);
             return -1;
         }
     };
