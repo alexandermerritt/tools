@@ -456,7 +456,7 @@ void cpuid4(void)
 
 }
 
-int main(int argc __unused, char *argv[] __unused)
+int main(void)
 {
     if (argc != 2) {
         fprintf(stderr, "Error: specify cpuid function\n");
