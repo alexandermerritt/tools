@@ -177,6 +177,17 @@ void cpuid7(void)
     unsigned int max_leaf = r.eax;
     printf("   max leaf:    %u\n", max_leaf);
 
+    // EBX flags
+
+    bool has_sgx = ((r.ebx >> 2) & 0x1);
+    printf("        SGX:    %s\n", ENABLED_STR(has_sgx));
+
+    bool has_avx2 = ((r.ebx >> 5) & 0x1);
+    printf("       AVX2:    %s\n", ENABLED_STR(has_avx2));
+
+    bool has_rtm = ((r.ebx >> 11) & 0x1);
+    printf("        RTM:    %s\n", ENABLED_STR(has_rtm));
+
     bool has_cmt = ((r.ebx >> 12) & 0x1);
     printf("        PQM:    %s\n", ENABLED_STR(has_cmt));
     if (has_cmt) {
@@ -198,6 +209,12 @@ void cpuid7(void)
         printf("                  L3 local BW:            %s\n", ENABLED_STR((r2.edx)));
     }
 
+    bool has_mpx = ((r.ebx >> 14) & 0x1);
+    printf("        MPX:    %s\n", ENABLED_STR(has_mpx));
+
+    // Note: detection of this feature not limited to just this CPUID
+    // bit. Specific CPU models have this despite CPUID reporting
+    // false.
     bool has_cat = ((r.ebx >> 15) & 0x1);
     printf("        PQE:    %s\n", ENABLED_STR(has_cat));
     if (has_cat) {
@@ -215,6 +232,10 @@ void cpuid7(void)
                 ((r2.ebx >> 1) & 0x1) ? "should be infrequent" : "n/a");
         printf("              highest COS for ResID:  %u\n", (r2.edx & 0x7fff) + 1);
     }
+
+    // ECX flags
+    bool has_rpid = ((r.ecx >> 22) & 0x1);
+    printf("       RPID:    %s\n", ENABLED_STR(has_rpid));
 
     printf("\n");
 }
