@@ -276,6 +276,7 @@ void cpuid1(void)
     printf("\n");
     printf("        CLFLUSH:    %u (instruction supported?)\n", ((r.edx >> 19) & 0x1));
     printf("   CLFLUSH size:    %u\n", ((r.ebx >> 8) & 0xff) << 3);
+    printf("        APIC ID:    %u\n", ((r.ebx >> 24) & 0xff));
 
     printf("\n");
     printf(" Page Size Ext.:    %u (4MB pages?)\n", ((r.edx >> 3) & 0x1));
