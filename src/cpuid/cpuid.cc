@@ -1,5 +1,12 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <unistd.h>
+#include <sys/syscall.h>
+
 #include <iostream>
 #include <string.h>
+//#include <linux/getcpu.h>
 
 static const char *CPUID2[] = {
     [0x00] = "General Null descriptor, this byte contains no information",
@@ -151,6 +158,12 @@ struct regs
 {
     unsigned int eax, ebx, ecx, edx;
 };
+
+static inline void
+rdtscp_aux(uint64_t &aux)
+{
+    __asm__ __volatile__ ("rdtscp" : : "c"(aux) : "rcx" );
+}
 
 static inline void
 cpuid(unsigned int leaf, unsigned int subleaf, struct regs &r)
@@ -487,6 +500,14 @@ void usage(char *args[]) {
 
 int main(int narg, char *args[])
 {
+    unsigned int cpu, node;
+    syscall(SYS_getcpu, &cpu, &node, NULL);
+    printf("cpu %u node %u\n", cpu, node);
+
+    uint64_t aux = 0ul;
+    rdtscp_aux(aux);
+    printf("IA32_TSC_AUX: 0x%lx\n", aux);
+
     if (narg != 2) {
         usage(args);
         return -1;
