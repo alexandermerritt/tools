@@ -246,6 +246,12 @@ void cpuid7(void)
         printf("              highest COS for ResID:  %u\n", (r2.edx & 0x7fff) + 1);
     }
 
+    bool has_clflushopt = ((r.ebx >> 23) & 0x1);
+    printf(" CLFLUSHOPT:    %s\n", ENABLED_STR(has_clflushopt));
+
+    bool has_clwb = ((r.ebx >> 24) & 0x1);
+    printf("       CLWB:    %s\n", ENABLED_STR(has_clwb));
+
     // ECX flags
     bool has_rpid = ((r.ecx >> 22) & 0x1);
     printf("       RPID:    %s\n", ENABLED_STR(has_rpid));
